@@ -1,19 +1,3 @@
-/*
-  # Create Admin User and Profile
-
-  1. New Records
-    - Create admin user in auth.users table
-    - Create corresponding admin profile in profiles table
-    
-  2. Changes
-    - Adds default admin user with email admin@empresa.com.br
-    - Sets up admin profile with full permissions
-    
-  3. Security
-    - Password is securely hashed using bcrypt
-    - Profile is linked to auth user via foreign key
-*/
-
 DO $$ 
 BEGIN
   -- Create admin user if not exists
