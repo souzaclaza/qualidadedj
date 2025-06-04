@@ -11,7 +11,6 @@ if (!supabaseAnonKey) {
   throw new Error('Missing VITE_SUPABASE_ANON_KEY environment variable');
 }
 
-// Create Supabase client with additional options
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -27,7 +26,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Test the connection
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Supabase Auth Event:', event);
   if (event === 'SIGNED_IN') {
     console.log('Successfully connected to Supabase');
   }
