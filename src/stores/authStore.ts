@@ -1,110 +1,157 @@
 import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
 import { AuthState, User } from '../types';
-
-// Mock users for demonstration
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Administrador',
-    email: 'admin@empresa.com.br',
-    password: 'Admin@123',
-    role: 'admin',
-    permissions: ['all'] // Admin has full access by default
-  },
-  {
-    id: '2',
-    name: 'Editor',
-    email: 'editor@empresa.com.br',
-    password: 'Editor@123',
-    role: 'editor',
-    permissions: [
-      'cadastro-toners',
-      'registro-retornados', 
-      'consulta-retornados',
-      'graficos-volumetria',
-      'graficos-destino',
-      'graficos-valor-recuperado'
-    ]
-  },
-  {
-    id: '3',
-    name: 'Visualizador',
-    email: 'viewer@empresa.com.br',
-    password: 'Viewer@123',
-    role: 'viewer',
-    permissions: [
-      'consulta-retornados',
-      'graficos-volumetria',
-      'graficos-destino',
-      'graficos-valor-recuperado'
-    ]
-  }
-];
 
 interface AuthStore extends AuthState {
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  updateUserPassword: (userId: string, newPassword: string) => void;
-  addUser: (user: Omit<User, 'id'>) => void;
-  updateUser: (userId: string, updates: Partial<User>) => void;
-  deleteUser: (userId: string) => void;
+  logout: () => Promise<void>;
+  updateUserPassword: (userId: string, newPassword: string) => Promise<void>;
+  addUser: (user: Omit<User, 'id'>) => Promise<void>;
+  updateUser: (userId: string, updates: Partial<User>) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
   hasPermission: (permission: string) => boolean;
-  updateUserPermissions: (userId: string, permissions: string[]) => void;
+  updateUserPermissions: (userId: string, permissions: string[]) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  users: mockUsers,
+  users: [],
 
   login: async (email: string, password: string) => {
-    const users = get().users;
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-      const { password: _, ...userWithoutPassword } = user;
-      set({ user: userWithoutPassword, isAuthenticated: true });
-      return true;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        set({ 
+          user: {
+            id: data.user.id,
+            email: data.user.email!,
+            name: profile?.name || '',
+            role: profile?.role || 'viewer',
+            permissions: profile?.permissions || []
+          },
+          isAuthenticated: true 
+        });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    
-    return false;
   },
 
-  logout: () => {
-    set({ user: null, isAuthenticated: false });
+  logout: async () => {
+    try {
+      await supabase.auth.signOut();
+      set({ user: null, isAuthenticated: false });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   },
 
-  updateUserPassword: (userId: string, newPassword: string) => {
-    set(state => ({
-      users: state.users.map(user => 
-        user.id === userId 
-          ? { ...user, password: newPassword }
-          : user
-      )
-    }));
+  updateUserPassword: async (userId: string, newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.admin.updateUserById(
+        userId,
+        { password: newPassword }
+      );
+      if (error) throw error;
+    } catch (error) {
+      console.error('Update password error:', error);
+      throw error;
+    }
   },
 
-  addUser: (newUser) => {
-    const id = Date.now().toString();
-    set(state => ({
-      users: [...state.users, { ...newUser, id }]
-    }));
+  addUser: async (newUser) => {
+    try {
+      const { data, error } = await supabase.auth.admin.createUser({
+        email: newUser.email,
+        password: newUser.password,
+        email_confirm: true
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            name: newUser.name,
+            role: newUser.role,
+            permissions: newUser.permissions
+          });
+
+        if (profileError) throw profileError;
+      }
+    } catch (error) {
+      console.error('Add user error:', error);
+      throw error;
+    }
   },
 
-  updateUser: (userId: string, updates) => {
-    set(state => ({
-      users: state.users.map(user =>
-        user.id === userId
-          ? { ...user, ...updates }
-          : user
-      )
-    }));
+  updateUser: async (userId: string, updates) => {
+    try {
+      if (updates.email || updates.password) {
+        const { error } = await supabase.auth.admin.updateUserById(
+          userId,
+          {
+            email: updates.email,
+            password: updates.password
+          }
+        );
+        if (error) throw error;
+      }
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          name: updates.name,
+          role: updates.role,
+          permissions: updates.permissions
+        })
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
+
+      // Update local state if current user
+      const { user } = get();
+      if (user?.id === userId) {
+        set({
+          user: {
+            ...user,
+            ...updates,
+            password: undefined
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Update user error:', error);
+      throw error;
+    }
   },
 
-  deleteUser: (userId: string) => {
-    set(state => ({
-      users: state.users.filter(user => user.id !== userId)
-    }));
+  deleteUser: async (userId: string) => {
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      if (error) throw error;
+    } catch (error) {
+      console.error('Delete user error:', error);
+      throw error;
+    }
   },
 
   hasPermission: (permission: string) => {
@@ -114,17 +161,28 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     return user.permissions?.includes(permission) || false;
   },
 
-  updateUserPermissions: (userId: string, permissions: string[]) => {
-    set(state => ({
-      users: state.users.map(user =>
-        user.id === userId
-          ? { ...user, permissions }
-          : user
-      ),
-      // Update current user if it's the one being modified
-      user: state.user?.id === userId 
-        ? { ...state.user, permissions }
-        : state.user
-    }));
+  updateUserPermissions: async (userId: string, permissions: string[]) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ permissions })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      // Update local state if current user
+      const { user } = get();
+      if (user?.id === userId) {
+        set({
+          user: {
+            ...user,
+            permissions
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Update permissions error:', error);
+      throw error;
+    }
   }
 }));
