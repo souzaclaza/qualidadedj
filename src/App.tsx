@@ -23,7 +23,6 @@ import UploadBPMN from './pages/bpmn/UploadBPMN';
 import ConsultaBPMN from './pages/bpmn/ConsultaBPMN';
 import ConfigEmpresa from './pages/configuracoes/ConfigEmpresa';
 import ConfigFiliais from './pages/configuracoes/ConfigFiliais';
-import ConfigDatabase from './pages/configuracoes/ConfigDatabase';
 import RegistroNC from './pages/nc/RegistroNC';
 import AnaliseNC from './pages/nc/AnaliseNC';
 import PlanoAcaoNC from './pages/nc/PlanoAcaoNC';
@@ -90,7 +89,6 @@ function App() {
       {/* Configurações */}
       <Route path="/configuracoes/empresa" element={<Layout><ConfigEmpresa /></Layout>} />
       <Route path="/configuracoes/filiais" element={<Layout><ConfigFiliais /></Layout>} />
-      <Route path="/configuracoes/database" element={<Layout><ConfigDatabase /></Layout>} />
     </Routes>
   );
 }

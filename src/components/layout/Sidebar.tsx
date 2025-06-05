@@ -143,8 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCloseSidebar }) => {
       icon: <Settings className="h-5 w-5" />,
       items: [
         { id: 'dados-empresa', title: 'Dados da Empresa', path: '/configuracoes/empresa' },
-        { id: 'cadastro-filiais', title: 'Cadastro de Filiais', path: '/configuracoes/filiais' },
-        { id: 'database', title: 'Banco de Dados', path: '/configuracoes/database' }
+        { id: 'cadastro-filiais', title: 'Cadastro de Filiais', path: '/configuracoes/filiais' }
       ]
     }
   ];
