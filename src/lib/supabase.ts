@@ -66,8 +66,10 @@ export const mapToSnakeCase = (data: any): any => {
     const newObj: any = {};
     
     Object.keys(data).forEach(key => {
-      // Convert camelCase to snake_case
-      const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      // Convert camelCase to snake_case while preserving acronyms
+      const snakeKey = key
+        .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+        .toLowerCase();
       newObj[snakeKey] = mapToSnakeCase(data[key]);
     });
     
