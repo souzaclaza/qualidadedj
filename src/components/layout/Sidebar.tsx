@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../../stores/authStore';
 import {
   LayoutDashboard,
   Repeat2,
@@ -35,7 +34,6 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onCloseSidebar }) => {
   const location = useLocation();
-  const { hasPermission } = useAuthStore();
   const [openSections, setOpenSections] = useState<string[]>([]);
 
   const menuSections: MenuSection[] = [
@@ -146,8 +144,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onCloseSidebar }) => {
       items: [
         { id: 'dados-empresa', title: 'Dados da Empresa', path: '/configuracoes/empresa' },
         { id: 'cadastro-filiais', title: 'Cadastro de Filiais', path: '/configuracoes/filiais' },
-        { id: 'configuracoes-seguranca', title: 'Segurança', path: '/configuracoes/seguranca' },
-        { id: 'usuarios-permissoes', title: 'Usuários e Permissões', path: '/configuracoes/usuarios' },
         { id: 'database', title: 'Banco de Dados', path: '/configuracoes/database' }
       ]
     }
@@ -166,7 +162,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onCloseSidebar }) => {
   };
 
   const handleItemClick = () => {
-    // Close sidebar on mobile when clicking a menu item
     if (window.innerWidth < 1024) {
       onCloseSidebar();
     }
@@ -183,9 +178,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onCloseSidebar }) => {
       <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-1">
           {menuSections.map(section => {
-            const hasPermittedItems = section.items.some(item => hasPermission(item.id));
-            if (!hasPermittedItems) return null;
-
             const isOpen = openSections.includes(section.id);
             const hasActiveItem = section.items.some(item => isCurrentPath(item.path));
 
@@ -223,8 +215,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onCloseSidebar }) => {
                 {isOpen && (
                   <ul className="mt-1 pl-4 space-y-1">
                     {section.items.map(item => {
-                      if (!hasPermission(item.id)) return null;
-
                       const isActive = isCurrentPath(item.path);
 
                       return (
