@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Download, Upload, Filter, X } from 'lucide-react';
+import { Save, Download, Upload, Filter, X, Trash2 } from 'lucide-react';
 import { TonerRetornado, FiltrosConsulta } from '../../types';
 import * as XLSX from 'xlsx';
 import { useTonerStore } from '../../stores/tonerStore';
+import AdminPasswordModal from '../../components/AdminPasswordModal';
 
 const mockFiliais = [
   { id: '1', nome: 'São Paulo' },
@@ -11,12 +12,14 @@ const mockFiliais = [
 ];
 
 const ConsultaRetornados: React.FC = () => {
-  const { retornados, fetchRetornados, addRetornados } = useTonerStore();
+  const { retornados, fetchRetornados, addRetornados, deleteRetornado } = useTonerStore();
   const [filteredRetornados, setFilteredRetornados] = useState<TonerRetornado[]>([]);
   const [filtros, setFiltros] = useState<FiltrosConsulta>({});
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedRetornadoId, setSelectedRetornadoId] = useState<string | null>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -186,6 +189,24 @@ const ConsultaRetornados: React.FC = () => {
       };
       
       reader.readAsBinaryString(file);
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setSelectedRetornadoId(id);
+    setIsPasswordModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedRetornadoId) {
+      try {
+        await deleteRetornado(selectedRetornadoId);
+        setIsPasswordModalOpen(false);
+        setSelectedRetornadoId(null);
+      } catch (error) {
+        console.error('Error deleting retornado:', error);
+        alert('Erro ao excluir o registro. Por favor, tente novamente.');
+      }
     }
   };
 
@@ -362,6 +383,9 @@ const ConsultaRetornados: React.FC = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider">
                   Valor Resgatado
                 </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-secondary-700">
@@ -405,11 +429,20 @@ const ConsultaRetornados: React.FC = () => {
                       ? `R$ ${retornado.valorResgatado.toFixed(2)}`
                       : '-'}
                   </td>
+                  <td className="px-4 py-3 text-sm text-right">
+                    <button
+                      onClick={() => handleDeleteClick(retornado.id)}
+                      className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {filteredRetornados.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-3 text-sm text-center text-secondary-500 dark:text-secondary-400">
+                  <td colSpan={7} className="px-4 py-3 text-sm text-center text-secondary-500 dark:text-secondary-400">
                     Nenhum registro encontrado
                   </td>
                 </tr>
@@ -470,6 +503,18 @@ const ConsultaRetornados: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Confirmação de Senha */}
+      {isPasswordModalOpen && (
+        <AdminPasswordModal
+          title="Excluir Registro"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => {
+            setIsPasswordModalOpen(false);
+            setSelectedRetornadoId(null);
+          }}
+        />
       )}
     </div>
   );

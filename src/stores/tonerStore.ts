@@ -11,6 +11,7 @@ interface TonerStore {
   addToner: (toner: Omit<Toner, 'id'>) => Promise<void>;
   updateToner: (id: string, toner: Omit<Toner, 'id'>) => Promise<void>;
   deleteToner: (id: string) => Promise<void>;
+  deleteRetornado: (id: string) => Promise<void>;
   getDestinationStats: () => { name: string; value: number }[];
   getTotalRetornados: () => number;
   getValorRecuperado: () => number;
@@ -125,6 +126,24 @@ export const useTonerStore = create<TonerStore>((set, get) => ({
       }));
     } catch (error) {
       console.error('Error deleting toner:', error);
+      throw error;
+    }
+  },
+  
+  deleteRetornado: async (id) => {
+    try {
+      const { error } = await supabase
+        .from('retornados')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      set((state) => ({
+        retornados: state.retornados.filter((r) => r.id !== id)
+      }));
+    } catch (error) {
+      console.error('Error deleting retornado:', error);
       throw error;
     }
   },
