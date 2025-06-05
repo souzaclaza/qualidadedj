@@ -1,14 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://verdant-crisp-5d20a3.netlify.app';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlcmRhbnQtY3Jpc3AtNWQyMGEzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc3OTc1MjAsImV4cCI6MjAzMzM3MzUyMH0.Yd-Yk-Wd-Yk-Wd-Yk-Wd-Yk-Wd-Yk-Wd-Yk-Wd-Yk';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl) {
-  console.warn('Missing VITE_SUPABASE_URL environment variable, using fallback');
+  throw new Error('Missing VITE_SUPABASE_URL environment variable');
 }
 
 if (!supabaseAnonKey) {
-  console.warn('Missing VITE_SUPABASE_ANON_KEY environment variable, using fallback');
+  throw new Error('Missing VITE_SUPABASE_ANON_KEY environment variable');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
