@@ -25,7 +25,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         password
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.status === 500 && error.message.includes('Database error querying schema')) {
+          console.error('Internal Supabase database error. Please ensure:');
+          console.error('1. The user is created in the Supabase dashboard');
+          console.error('2. The database schema and RLS policies are set up correctly');
+          console.error('3. Contact Supabase support if the issue persists');
+          throw new Error('Database configuration error');
+        }
+        throw error;
+      }
 
       if (data.user) {
         const { data: profile } = await supabase
