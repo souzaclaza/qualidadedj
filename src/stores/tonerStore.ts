@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
+import { supabase, mapToCamelCase, mapToSnakeCase } from '../lib/supabase';
 import { Toner, TonerRetornado } from '../types';
 
 interface TonerStore {
@@ -7,7 +7,7 @@ interface TonerStore {
   retornados: TonerRetornado[];
   setToners: (toners: Toner[]) => void;
   setRetornados: (retornados: TonerRetornado[]) => void;
-  addRetornados: (novosRetornados: TonerRetornado[]) => void;
+  addRetornados: (novosRetornados: TonerRetornado[]) => Promise<void>;
   addToner: (toner: Omit<Toner, 'id'>) => Promise<void>;
   updateToner: (id: string, toner: Omit<Toner, 'id'>) => Promise<void>;
   deleteToner: (id: string) => Promise<void>;
@@ -39,15 +39,14 @@ export const useTonerStore = create<TonerStore>((set, get) => ({
           gramatura_restante: r.gramaturaRestante,
           porcentagem_restante: r.porcentagemRestante,
           destino_final: r.destinoFinal,
-          data_registro: r.dataRegistro,
+          data_registro: r.dataRegistro.toISOString(),
           valor_resgatado: r.valorResgatado
         })));
 
       if (error) throw error;
 
-      set((state) => ({ 
-        retornados: [...state.retornados, ...novosRetornados]
-      }));
+      // Fetch updated data to ensure we have the latest
+      await get().fetchRetornados();
     } catch (error) {
       console.error('Error adding retornados:', error);
       throw error;
@@ -56,29 +55,26 @@ export const useTonerStore = create<TonerStore>((set, get) => ({
 
   addToner: async (toner) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('toners')
-        .insert({
+        .insert(mapToSnakeCase({
           modelo: toner.modelo,
-          peso_cheio: toner.pesoCheio,
-          peso_vazio: toner.pesoVazio,
-          impressoras_compativeis: toner.impressorasCompativeis,
+          pesoCheio: toner.pesoCheio,
+          pesoVazio: toner.pesoVazio,
+          impressorasCompativeis: toner.impressorasCompativeis,
           cor: toner.cor,
-          area_impressa_iso: toner.areaImpressaISO,
-          capacidade_folhas: toner.capacidadeFolhas,
+          areaImpressaISO: toner.areaImpressaISO,
+          capacidadeFolhas: toner.capacidadeFolhas,
           tipo: toner.tipo,
-          preco_compra: toner.precoCompra,
-          preco_folha: toner.precoFolha,
+          precoCompra: toner.precoCompra,
+          precoFolha: toner.precoFolha,
           gramatura: toner.gramatura
-        })
-        .select()
-        .single();
+        }));
 
       if (error) throw error;
 
-      set((state) => ({ 
-        toners: [...state.toners, data as Toner]
-      }));
+      // Fetch updated data to ensure we have the latest
+      await get().fetchToners();
     } catch (error) {
       console.error('Error adding toner:', error);
       throw error;
@@ -89,27 +85,26 @@ export const useTonerStore = create<TonerStore>((set, get) => ({
     try {
       const { error } = await supabase
         .from('toners')
-        .update({
+        .update(mapToSnakeCase({
           modelo: toner.modelo,
-          peso_cheio: toner.pesoCheio,
-          peso_vazio: toner.pesoVazio,
-          impressoras_compativeis: toner.impressorasCompativeis,
+          pesoCheio: toner.pesoCheio,
+          pesoVazio: toner.pesoVazio,
+          impressorasCompativeis: toner.impressorasCompativeis,
           cor: toner.cor,
-          area_impressa_iso: toner.areaImpressaISO,
-          capacidade_folhas: toner.capacidadeFolhas,
+          areaImpressaISO: toner.areaImpressaISO,
+          capacidadeFolhas: toner.capacidadeFolhas,
           tipo: toner.tipo,
-          preco_compra: toner.precoCompra,
-          preco_folha: toner.precoFolha,
+          precoCompra: toner.precoCompra,
+          precoFolha: toner.precoFolha,
           gramatura: toner.gramatura,
-          updated_at: new Date()
-        })
+          updatedAt: new Date()
+        }))
         .eq('id', id);
 
       if (error) throw error;
 
-      set((state) => ({
-        toners: state.toners.map((t) => t.id === id ? { ...t, ...toner } : t)
-      }));
+      // Fetch updated data to ensure we have the latest
+      await get().fetchToners();
     } catch (error) {
       console.error('Error updating toner:', error);
       throw error;
@@ -188,7 +183,22 @@ export const useTonerStore = create<TonerStore>((set, get) => ({
 
       if (error) throw error;
 
-      set({ toners: data as Toner[] });
+      const formattedData = data.map(item => ({
+        id: item.id,
+        modelo: item.modelo,
+        pesoCheio: item.peso_cheio,
+        pesoVazio: item.peso_vazio,
+        impressorasCompativeis: item.impressoras_compativeis,
+        cor: item.cor,
+        areaImpressaISO: item.area_impressa_iso,
+        capacidadeFolhas: item.capacidade_folhas,
+        tipo: item.tipo,
+        precoCompra: item.preco_compra,
+        precoFolha: item.preco_folha,
+        gramatura: item.gramatura
+      }));
+
+      set({ toners: formattedData });
     } catch (error) {
       console.error('Error fetching toners:', error);
       throw error;

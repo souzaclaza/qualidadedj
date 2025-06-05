@@ -1,40 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Plus, Edit, Trash2 } from 'lucide-react';
+import { useTonerStore } from '../../stores/tonerStore';
 import { Toner } from '../../types';
 
-const mockToners: Toner[] = [
-  {
-    id: '1',
-    modelo: 'HP 26A',
-    pesoCheio: 1200,
-    pesoVazio: 800,
-    impressorasCompativeis: ['HP LaserJet Pro M402', 'HP LaserJet Pro MFP M426'],
-    cor: 'black',
-    areaImpressaISO: '5%',
-    capacidadeFolhas: 3100,
-    tipo: 'original',
-    precoCompra: 349.90,
-    precoFolha: 349.90 / 3100,
-    gramatura: 400
-  },
-  {
-    id: '2',
-    modelo: 'Brother TN660',
-    pesoCheio: 950,
-    pesoVazio: 650,
-    impressorasCompativeis: ['Brother HL-L2340DW', 'Brother HL-L2360DW'],
-    cor: 'black',
-    areaImpressaISO: '5%',
-    capacidadeFolhas: 2600,
-    tipo: 'compatível',
-    precoCompra: 189.90,
-    precoFolha: 189.90 / 2600,
-    gramatura: 300
-  }
-];
-
 const CadastroToners: React.FC = () => {
-  const [toners, setToners] = useState<Toner[]>(mockToners);
+  const { toners, addToner, updateToner, deleteToner, fetchToners } = useTonerStore();
   const [formData, setFormData] = useState<Partial<Toner>>({
     modelo: '',
     pesoCheio: 0,
@@ -48,6 +18,11 @@ const CadastroToners: React.FC = () => {
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [compatiblePrinters, setCompatiblePrinters] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchToners();
+  }, [fetchToners]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -73,32 +48,48 @@ const CadastroToners: React.FC = () => {
         gramatura,
         precoFolha
       });
+      
+      return {
+        ...formData,
+        gramatura,
+        precoFolha
+      };
     }
+    
+    return formData;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    calculateDerivedValues();
+    setIsLoading(true);
     
-    const impressorasCompativeis = compatiblePrinters
-      .split('\n')
-      .map(printer => printer.trim())
-      .filter(printer => printer !== '');
-    
-    const newToner: Toner = {
-      id: editingId || Date.now().toString(),
-      ...formData as Omit<Toner, 'id'>,
-      impressorasCompativeis
-    };
-    
-    if (editingId) {
-      setToners(toners.map(toner => toner.id === editingId ? newToner : toner));
-      setEditingId(null);
-    } else {
-      setToners([...toners, newToner]);
+    try {
+      const updatedFormData = calculateDerivedValues();
+      
+      const impressorasCompativeis = compatiblePrinters
+        .split('\n')
+        .map(printer => printer.trim())
+        .filter(printer => printer !== '');
+      
+      if (editingId) {
+        await updateToner(editingId, {
+          ...updatedFormData as Omit<Toner, 'id'>,
+          impressorasCompativeis
+        });
+      } else {
+        await addToner({
+          ...updatedFormData as Omit<Toner, 'id'>,
+          impressorasCompativeis
+        });
+      }
+      
+      resetForm();
+    } catch (error) {
+      console.error('Error saving toner:', error);
+      alert('Erro ao salvar o toner. Por favor, tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
-    
-    resetForm();
   };
 
   const handleEdit = (toner: Toner) => {
@@ -107,8 +98,15 @@ const CadastroToners: React.FC = () => {
     setEditingId(toner.id);
   };
 
-  const handleDelete = (id: string) => {
-    setToners(toners.filter(toner => toner.id !== id));
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este toner?')) {
+      try {
+        await deleteToner(id);
+      } catch (error) {
+        console.error('Error deleting toner:', error);
+        alert('Erro ao excluir o toner. Por favor, tente novamente.');
+      }
+    }
   };
 
   const resetForm = () => {
@@ -291,9 +289,10 @@ const CadastroToners: React.FC = () => {
                 <button
                   type="submit"
                   className="btn btn-primary"
+                  disabled={isLoading}
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {editingId ? 'Atualizar' : 'Salvar'}
+                  {isLoading ? 'Salvando...' : editingId ? 'Atualizar' : 'Salvar'}
                 </button>
               </div>
             </form>

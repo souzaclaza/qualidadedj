@@ -10,7 +10,7 @@ const mockFiliais = [
 ];
 
 const RegistroRetornados: React.FC = () => {
-  const { toners, addRetornados } = useTonerStore();
+  const { toners, addRetornados, fetchToners } = useTonerStore();
   const [formData, setFormData] = useState({
     idCliente: '',
     unidade: '',
@@ -26,6 +26,10 @@ const RegistroRetornados: React.FC = () => {
   const [valorResgatado, setValorResgatado] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  useEffect(() => {
+    fetchToners();
+  }, [fetchToners]);
 
   // Reset selected toner when modeloToner changes
   useEffect(() => {
@@ -80,7 +84,7 @@ const RegistroRetornados: React.FC = () => {
     setDestinoFinal(destino);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!destinoFinal || !selectedToner) {
@@ -90,23 +94,21 @@ const RegistroRetornados: React.FC = () => {
     
     setIsLoading(true);
     
-    const novoRetornado = {
-      id: Date.now().toString(),
-      idCliente: formData.idCliente,
-      unidade: formData.unidade,
-      modeloToner: selectedToner.modelo,
-      pesoRetornado: formData.pesoRetornado,
-      gramaturaRestante,
-      porcentagemRestante,
-      destinoFinal: destinoFinal as 'estoque' | 'uso-interno' | 'descarte' | 'garantia',
-      dataRegistro: new Date(),
-      valorResgatado: destinoFinal === 'estoque' ? valorResgatado : 0
-    };
+    try {
+      const novoRetornado = {
+        id: Date.now().toString(),
+        idCliente: formData.idCliente,
+        unidade: formData.unidade,
+        modeloToner: selectedToner.modelo,
+        pesoRetornado: formData.pesoRetornado,
+        gramaturaRestante,
+        porcentagemRestante,
+        destinoFinal: destinoFinal as 'estoque' | 'uso-interno' | 'descarte' | 'garantia',
+        dataRegistro: new Date(),
+        valorResgatado: destinoFinal === 'estoque' ? valorResgatado : 0
+      };
 
-    addRetornados([novoRetornado]);
-    
-    setTimeout(() => {
-      setIsLoading(false);
+      await addRetornados([novoRetornado]);
       setIsSuccess(true);
       
       setTimeout(() => {
@@ -124,7 +126,12 @@ const RegistroRetornados: React.FC = () => {
         setValorResgatado(0);
         setIsSuccess(false);
       }, 3000);
-    }, 1500);
+    } catch (error) {
+      console.error('Error registering toner:', error);
+      alert('Erro ao registrar o toner. Por favor, tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getColorClass = () => {

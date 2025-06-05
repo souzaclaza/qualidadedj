@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Download, Upload, Filter, X } from 'lucide-react';
 import { TonerRetornado, FiltrosConsulta } from '../../types';
 import * as XLSX from 'xlsx';
@@ -11,10 +11,30 @@ const mockFiliais = [
 ];
 
 const ConsultaRetornados: React.FC = () => {
-  const { retornados, setRetornados, addRetornados } = useTonerStore();
+  const { retornados, fetchRetornados, addRetornados } = useTonerStore();
+  const [filteredRetornados, setFilteredRetornados] = useState<TonerRetornado[]>([]);
   const [filtros, setFiltros] = useState<FiltrosConsulta>({});
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await fetchRetornados();
+      } catch (error) {
+        console.error('Error fetching retornados:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [fetchRetornados]);
+
+  useEffect(() => {
+    setFilteredRetornados(retornados);
+  }, [retornados]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -59,18 +79,18 @@ const ConsultaRetornados: React.FC = () => {
       resultados = resultados.filter(r => r.destinoFinal === filtros.destinoFinal);
     }
     
-    setRetornados(resultados);
+    setFilteredRetornados(resultados);
     setFiltersVisible(false);
   };
 
   const resetarFiltros = () => {
     setFiltros({});
-    setRetornados(retornados);
+    setFilteredRetornados(retornados);
     setFiltersVisible(false);
   };
 
   const exportarExcel = () => {
-    const dadosExportacao = retornados.map(r => ({
+    const dadosExportacao = filteredRetornados.map(r => ({
       'ID Cliente': r.idCliente,
       'Unidade': r.unidade,
       'Modelo Toner': r.modeloToner,
@@ -127,42 +147,58 @@ const ConsultaRetornados: React.FC = () => {
     XLSX.writeFile(wb, 'template_retornados.xlsx');
   };
 
-  const importarExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const importarExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
       const reader = new FileReader();
       
-      reader.onload = (event) => {
-        const data = event.target?.result;
-        if (data) {
-          const wb = XLSX.read(data, { type: 'binary' });
-          const wsname = wb.SheetNames[0];
-          const ws = wb.Sheets[wsname];
-          const jsonData = XLSX.utils.sheet_to_json(ws);
-          
-          const novosRetornados: TonerRetornado[] = jsonData.map((item: any, index) => ({
-            id: (Date.now() + index).toString(),
-            idCliente: item['ID Cliente'],
-            unidade: item['Unidade'],
-            modeloToner: item['Modelo Toner'],
-            pesoRetornado: 0,
-            gramaturaRestante: 0,
-            porcentagemRestante: 0,
-            destinoFinal: item['Destino Final'].toLowerCase().replace(' ', '-') as TonerRetornado['destinoFinal'],
-            dataRegistro: new Date(item['Data Registro'].split('/').reverse().join('-')),
-            valorResgatado: Number(item['Valor Resgatado (R$)']) || 0
-          }));
+      reader.onload = async (event) => {
+        try {
+          const data = event.target?.result;
+          if (data) {
+            const wb = XLSX.read(data, { type: 'binary' });
+            const wsname = wb.SheetNames[0];
+            const ws = wb.Sheets[wsname];
+            const jsonData = XLSX.utils.sheet_to_json(ws);
+            
+            const novosRetornados: TonerRetornado[] = jsonData.map((item: any, index) => ({
+              id: (Date.now() + index).toString(),
+              idCliente: item['ID Cliente'],
+              unidade: item['Unidade'],
+              modeloToner: item['Modelo Toner'],
+              pesoRetornado: 0,
+              gramaturaRestante: 0,
+              porcentagemRestante: 0,
+              destinoFinal: item['Destino Final'].toLowerCase().replace(' ', '-') as TonerRetornado['destinoFinal'],
+              dataRegistro: new Date(item['Data Registro'].split('/').reverse().join('-')),
+              valorResgatado: Number(item['Valor Resgatado (R$)']) || 0
+            }));
 
-          addRetornados(novosRetornados);
-          setIsImportModalOpen(false);
-          alert(`Importados ${novosRetornados.length} registros com sucesso!`);
+            await addRetornados(novosRetornados);
+            setIsImportModalOpen(false);
+            alert(`Importados ${novosRetornados.length} registros com sucesso!`);
+          }
+        } catch (error) {
+          console.error('Error importing data:', error);
+          alert('Erro ao importar os dados. Verifique o formato do arquivo.');
         }
       };
       
       reader.readAsBinaryString(file);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary-500 border-t-transparent"></div>
+          <p className="mt-2 text-secondary-600 dark:text-secondary-400">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -329,7 +365,7 @@ const ConsultaRetornados: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-secondary-700">
-              {retornados.map(retornado => (
+              {filteredRetornados.map(retornado => (
                 <tr key={retornado.id}>
                   <td className="px-4 py-3 text-sm text-secondary-900 dark:text-secondary-200">
                     {retornado.dataRegistro.toLocaleDateString('pt-BR')}
@@ -371,7 +407,7 @@ const ConsultaRetornados: React.FC = () => {
                   </td>
                 </tr>
               ))}
-              {retornados.length === 0 && (
+              {filteredRetornados.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-3 text-sm text-center text-secondary-500 dark:text-secondary-400">
                     Nenhum registro encontrado

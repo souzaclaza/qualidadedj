@@ -8,6 +8,24 @@ import './index.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ErrorBoundaryProvider } from './components/ErrorBoundary';
 import { createQueryClient } from './hooks/queries/useQueryConfig';
+import { useTonerStore } from './stores/tonerStore';
+
+// Initialize data fetching
+const initializeData = async () => {
+  try {
+    const { fetchToners, fetchRetornados } = useTonerStore.getState();
+    await Promise.all([
+      fetchToners(),
+      fetchRetornados()
+    ]);
+    console.log('Data initialized successfully');
+  } catch (error) {
+    console.error('Error initializing data:', error);
+  }
+};
+
+// Initialize data
+initializeData();
 
 const queryClient = createQueryClient();
 
