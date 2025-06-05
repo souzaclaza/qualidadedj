@@ -37,6 +37,7 @@ const mockToners: Toner[] = [
 interface TonerStore {
   toners: Toner[];
   retornados: TonerRetornado[];
+  setToners: (toners: Toner[]) => void;
   setRetornados: (retornados: TonerRetornado[]) => void;
   addRetornados: (novosRetornados: TonerRetornado[]) => void;
   addToner: (toner: Toner) => void;
@@ -54,6 +55,8 @@ export const useTonerStore = create(
     (set, get) => ({
       toners: mockToners,
       retornados: [],
+      
+      setToners: (toners) => set({ toners }),
       
       setRetornados: (retornados) => set({ retornados }),
       
