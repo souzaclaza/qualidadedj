@@ -37,19 +37,37 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       }
 
       if (data.user) {
-        const { data: profile } = await supabase
+        // Try to get the profile, using maybeSingle() to handle non-existent profile
+        let { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
+
+        // If profile doesn't exist, create it with default values
+        if (!profile) {
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              name: email.split('@')[0], // Use part of email as default name
+              role: 'viewer', // Default role
+              permissions: [] // Default empty permissions
+            })
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          profile = newProfile;
+        }
 
         set({ 
           user: {
             id: data.user.id,
             email: data.user.email!,
-            name: profile?.name || '',
-            role: profile?.role || 'viewer',
-            permissions: profile?.permissions || []
+            name: profile.name,
+            role: profile.role,
+            permissions: profile.permissions
           },
           isAuthenticated: true 
         });
