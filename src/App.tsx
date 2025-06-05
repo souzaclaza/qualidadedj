@@ -1,9 +1,7 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/layout/Layout';
-import PrivateRoute from './components/PrivateRoute';
 import Dashboard from './pages/Dashboard';
-import Login from './pages/auth/Login';
 import CadastroToners from './pages/retornados/CadastroToners';
 import RegistroRetornados from './pages/retornados/RegistroRetornados';
 import ConsultaRetornados from './pages/retornados/ConsultaRetornados';
@@ -42,297 +40,61 @@ import ConsultaPareto from './pages/analise/pareto/ConsultaPareto';
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Layout><Dashboard /></Layout>} />
       
-      <Route path="/" element={
-        <PrivateRoute permission="dashboard">
-          <Layout>
-            <Dashboard />
-          </Layout>
-        </PrivateRoute>
-      } />
-
       {/* Retornados */}
-      <Route path="/retornados/cadastro" element={
-        <PrivateRoute permission="cadastro-toners">
-          <Layout>
-            <CadastroToners />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/retornados/registro" element={
-        <PrivateRoute permission="registro-retornados">
-          <Layout>
-            <RegistroRetornados />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/retornados/consulta" element={
-        <PrivateRoute permission="consulta-retornados">
-          <Layout>
-            <ConsultaRetornados />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/retornados/cadastro" element={<Layout><CadastroToners /></Layout>} />
+      <Route path="/retornados/registro" element={<Layout><RegistroRetornados /></Layout>} />
+      <Route path="/retornados/consulta" element={<Layout><ConsultaRetornados /></Layout>} />
 
       {/* Gráficos */}
-      <Route path="/graficos/volumetria" element={
-        <PrivateRoute permission="graficos-volumetria">
-          <Layout>
-            <GraficoVolumetria />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/graficos/destino" element={
-        <PrivateRoute permission="graficos-destino">
-          <Layout>
-            <GraficoDestino />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/graficos/valor-recuperado" element={
-        <PrivateRoute permission="graficos-valor-recuperado">
-          <Layout>
-            <GraficoValorRecuperado />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/graficos/volumetria" element={<Layout><GraficoVolumetria /></Layout>} />
+      <Route path="/graficos/destino" element={<Layout><GraficoDestino /></Layout>} />
+      <Route path="/graficos/valor-recuperado" element={<Layout><GraficoValorRecuperado /></Layout>} />
 
       {/* Auditoria */}
-      <Route path="/auditoria/cadastro" element={
-        <PrivateRoute permission="auditoria-cadastro">
-          <Layout>
-            <CadastroFormularios />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/auditoria/registro" element={
-        <PrivateRoute permission="auditoria-registro">
-          <Layout>
-            <RegistroAuditoria />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/auditoria/consulta" element={
-        <PrivateRoute permission="auditoria-consulta">
-          <Layout>
-            <ConsultaAuditoria />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/auditoria/cadastro" element={<Layout><CadastroFormularios /></Layout>} />
+      <Route path="/auditoria/registro" element={<Layout><RegistroAuditoria /></Layout>} />
+      <Route path="/auditoria/consulta" element={<Layout><ConsultaAuditoria /></Layout>} />
 
       {/* Garantia */}
-      <Route path="/garantia/cadastro" element={
-        <PrivateRoute permission="garantia-cadastro">
-          <Layout>
-            <CadastroFornecedores />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/garantia/registro" element={
-        <PrivateRoute permission="garantia-registro">
-          <Layout>
-            <RegistroGarantia />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/garantia/consulta" element={
-        <PrivateRoute permission="garantia-consulta">
-          <Layout>
-            <ConsultaGarantia />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/garantia/graficos" element={
-        <PrivateRoute permission="garantia-graficos">
-          <Layout>
-            <GraficosGarantia />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/garantia/cadastro" element={<Layout><CadastroFornecedores /></Layout>} />
+      <Route path="/garantia/registro" element={<Layout><RegistroGarantia /></Layout>} />
+      <Route path="/garantia/consulta" element={<Layout><ConsultaGarantia /></Layout>} />
+      <Route path="/garantia/graficos" element={<Layout><GraficosGarantia /></Layout>} />
 
       {/* POP/IT */}
-      <Route path="/pop-it/cadastro" element={
-        <PrivateRoute permission="pop-it-cadastro">
-          <Layout>
-            <CadastroPopIt />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/pop-it/upload" element={
-        <PrivateRoute permission="pop-it-upload">
-          <Layout>
-            <UploadPopIt />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/pop-it/consulta" element={
-        <PrivateRoute permission="pop-it-consulta">
-          <Layout>
-            <ConsultaPopIt />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/pop-it/cadastro" element={<Layout><CadastroPopIt /></Layout>} />
+      <Route path="/pop-it/upload" element={<Layout><UploadPopIt /></Layout>} />
+      <Route path="/pop-it/consulta" element={<Layout><ConsultaPopIt /></Layout>} />
 
       {/* BPMN */}
-      <Route path="/bpmn/cadastro" element={
-        <PrivateRoute permission="bpmn-cadastro">
-          <Layout>
-            <CadastroBPMN />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/bpmn/upload" element={
-        <PrivateRoute permission="bpmn-upload">
-          <Layout>
-            <UploadBPMN />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/bpmn/consulta" element={
-        <PrivateRoute permission="bpmn-consulta">
-          <Layout>
-            <ConsultaBPMN />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/bpmn/cadastro" element={<Layout><CadastroBPMN /></Layout>} />
+      <Route path="/bpmn/upload" element={<Layout><UploadBPMN /></Layout>} />
+      <Route path="/bpmn/consulta" element={<Layout><ConsultaBPMN /></Layout>} />
 
       {/* Não Conformidades */}
-      <Route path="/nc/registro" element={
-        <PrivateRoute permission="nc-registro">
-          <Layout>
-            <RegistroNC />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/nc/analise" element={
-        <PrivateRoute permission="nc-analise">
-          <Layout>
-            <AnaliseNC />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/nc/plano-acao" element={
-        <PrivateRoute permission="nc-plano-acao">
-          <Layout>
-            <PlanoAcaoNC />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/nc/verificacao" element={
-        <PrivateRoute permission="nc-verificacao">
-          <Layout>
-            <VerificacaoNC />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/nc/consulta" element={
-        <PrivateRoute permission="nc-consulta">
-          <Layout>
-            <ConsultaNC />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/nc/graficos" element={
-        <PrivateRoute permission="nc-graficos">
-          <Layout>
-            <GraficosNC />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/nc/registro" element={<Layout><RegistroNC /></Layout>} />
+      <Route path="/nc/analise" element={<Layout><AnaliseNC /></Layout>} />
+      <Route path="/nc/plano-acao" element={<Layout><PlanoAcaoNC /></Layout>} />
+      <Route path="/nc/verificacao" element={<Layout><VerificacaoNC /></Layout>} />
+      <Route path="/nc/consulta" element={<Layout><ConsultaNC /></Layout>} />
+      <Route path="/nc/graficos" element={<Layout><GraficosNC /></Layout>} />
 
       {/* Análise Ishikawa */}
-      <Route path="/analise/ishikawa/registro" element={
-        <PrivateRoute permission="ishikawa-registro">
-          <Layout>
-            <RegistroIshikawa />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/analise/ishikawa/consulta" element={
-        <PrivateRoute permission="ishikawa-consulta">
-          <Layout>
-            <ConsultaIshikawa />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/analise/ishikawa/registro" element={<Layout><RegistroIshikawa /></Layout>} />
+      <Route path="/analise/ishikawa/consulta" element={<Layout><ConsultaIshikawa /></Layout>} />
 
       {/* Análise Pareto */}
-      <Route path="/analise/pareto/registro" element={
-        <PrivateRoute permission="pareto-registro">
-          <Layout>
-            <RegistroPareto />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/analise/pareto/consulta" element={
-        <PrivateRoute permission="pareto-consulta">
-          <Layout>
-            <ConsultaPareto />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/analise/pareto/registro" element={<Layout><RegistroPareto /></Layout>} />
+      <Route path="/analise/pareto/consulta" element={<Layout><ConsultaPareto /></Layout>} />
 
       {/* Configurações */}
-      <Route path="/configuracoes/empresa" element={
-        <PrivateRoute permission="dados-empresa">
-          <Layout>
-            <ConfigEmpresa />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/configuracoes/filiais" element={
-        <PrivateRoute permission="cadastro-filiais">
-          <Layout>
-            <ConfigFiliais />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/configuracoes/seguranca" element={
-        <PrivateRoute permission="configuracoes-seguranca">
-          <Layout>
-            <ConfigSeguranca />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/configuracoes/usuarios" element={
-        <PrivateRoute permission="usuarios-permissoes">
-          <Layout>
-            <ConfigUsuarios />
-          </Layout>
-        </PrivateRoute>
-      } />
-      
-      <Route path="/configuracoes/database" element={
-        <PrivateRoute permission="database">
-          <Layout>
-            <ConfigDatabase />
-          </Layout>
-        </PrivateRoute>
-      } />
+      <Route path="/configuracoes/empresa" element={<Layout><ConfigEmpresa /></Layout>} />
+      <Route path="/configuracoes/filiais" element={<Layout><ConfigFiliais /></Layout>} />
+      <Route path="/configuracoes/seguranca" element={<Layout><ConfigSeguranca /></Layout>} />
+      <Route path="/configuracoes/usuarios" element={<Layout><ConfigUsuarios /></Layout>} />
+      <Route path="/configuracoes/database" element={<Layout><ConfigDatabase /></Layout>} />
     </Routes>
   );
 }
